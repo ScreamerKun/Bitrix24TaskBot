@@ -17,7 +17,7 @@
 # Установка
 1. Заранее подготовьте телеграм бота, его токен, ID закрытого чата телеграм, (Создать бота можно через Botfather https://t.me/BotFather, также через него получаем токен бота. Узнать ID закрытого чата Telegram https://pikabu.ru/story/kak_uznat_identifikator_telegram_kanalachatagruppyi_kak_uznat_chat_id_telegram_bez_botov_i_koda_11099278)
 2. Заранее подготовьте входящий и исходящий вебхуки Bitrix24
-3. Скачиваем через командлет - "git clone https://github.com/ScreamerKun/Bitrix24TaskBot.git"
+3. Скачиваем через командлет - "git clone https://github.com/ScreamerKun/Bitrix24TaskBot.git", переходим в каталог с исходниками - "cd /Bitrix24TaskBot"
 4. Заполните зависимости в файле .env (TOKEN - токен бота телеграм. WEBHOOCK_TOKEN - токен Birtix24. BITRIX24_URL - ОБЯЗАТЕЛЬНО ПОЛНОЙ ССЫЛКОЙ С УКАЗАНИЕМ REST ВЕБХУКА пример: "https://(АдресБитрикс24).ru/rest/(IDСоздателяВебхука)/(ТокенВебхука)/".
 5. В самом коде (bot.py) заполняем ID участников в задаче RESPONSIBLE_ID - Исполнитель, CREATED_BY - Постановщик задачи (рекомендую создать сервисную УЗ Вашего корпоративного битрикс24) GROUP_ID - ID группы куда будет поставлена задача. AUDITORS - Наблюдатели задачи. ACCOMPLICES - Соисполнители задачи.
-6. Разворачиваем контейнер командлетом - "docker run --env-file .env -d --name bitrix24bot bitrix24bot"
+6. Пакуем и запускаем контейнер командлетами "docker build -t bitrix24bot", "docker run --env-file .env -d --name bitrix24bot bitrix24bot"
