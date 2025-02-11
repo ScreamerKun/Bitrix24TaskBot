@@ -15,16 +15,19 @@ from telebot import TeleBot, types
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 load_dotenv()
-
-TOKEN = os.getenv('TOKEN')
-WEBHOOK_TOKEN = os.getenv('WEBHOOK_TOKEN')
-BITRIX24_URL = os.getenv('BITRIX24_URL')
-CHAT_ID = os.getenv('CHAT_ID')
-SMTP_PORT = os.getenv('SMTP_PORT')
-SMTP_SRV = os.getenv('SMTP_SRV')
-SMTP_USR = os.getenv('SMTP_USR')
-SMTP_PSWD = os.getenv('SMTP_PSWD')
-BITRIX_TASK_URL = os.getenv('BITRIX_TASK_URL') 
+RESPONSIBLE_ID = os.getenv('RESPONSIBLE_ID')           # Ответственный
+CREATED_BY = os.getenv('CREATED_BY')                   # Кто создал задачу
+GROUP_ID = os.getenv('GROUP_ID')                       # ID группы
+ACCOMPLICES = os.getenv('ACCOMPLICES', '').split(',')  # Соисполнители (можно указать как строку через запятую)
+TOKEN = os.getenv('TOKEN')                             # Токен телеграм-бота
+WEBHOOK_TOKEN = os.getenv('WEBHOOK_TOKEN')             # Токен вебхука битрикс
+BITRIX24_URL = os.getenv('BITRIX24_URL')               # URL Bitrix
+CHAT_ID = os.getenv('CHAT_ID')                         # Чат куда приходят уведомления
+SMTP_PORT = os.getenv('SMTP_PORT')                     # SMTP для почтовой авторизации
+SMTP_SRV = os.getenv('SMTP_SRV')                       # Сервер SMTP для почтовой авторизации
+SMTP_USR = os.getenv('SMTP_USR')                       # Пользователь сервера SMTP
+SMTP_PSWD = os.getenv('SMTP_PSWD')                     # Пароль пользователя SMTP
+BITRIX_TASK_URL = os.getenv('BITRIX_TASK_URL')         # Тело ссылки для формирования ссылки на задачу, в чат телеграм.
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
@@ -106,20 +109,20 @@ def create_task(task_title, task_description, user_data, deadline):
 
     # Если постановщик задачи является руководителем отдела
     if user_data['ID'] == department_head_id:
-        observers = [user_data['ID'], 25]
+        observers = [user_data['ID']]
     else:
-        observers = [user_data['ID'], department_head_id, 25]
+        observers = [user_data['ID'], department_head_id]
 
     task_data = {
-        "fields": {
-            "TITLE": task_title,
-            "DESCRIPTION": f"{task_description}\n\nПостановщик: {user_name}",
-            "RESPONSIBLE_ID": 69,
-            "CREATED_BY": 1985,  
-            'GROUP_ID': 453,
-            'AUDITORS': [obs for obs in observers if obs],
-            'ACCOMPLICES': [1177],
-            "DEADLINE": deadline,
+    "fields": {
+        "TITLE": task_title,
+        "DESCRIPTION": f"{task_description}\n\nПостановщик: {user_name}",
+        "RESPONSIBLE_ID": RESPONSIBLE_ID,
+        "CREATED_BY": CREATED_BY,
+        "GROUP_ID": GROUP_ID,
+        "AUDITORS": [obs for obs in observers if obs],  # Наблюдатели
+        "ACCOMPLICES": ACCOMPLICES,
+        "DEADLINE": deadline
         }
     }
 
@@ -273,16 +276,14 @@ def create_task_and_notify(user_id):
 
     response = create_task(task_title, task_description, user_data, user_deadline)
 
-if 'error' in response:
-    bot.send_message(user_id, response['error'], reply_markup=main_menu_markup(authenticated=True))
-elif response.get('result'):
-    task_url = f'{BITRIX_TASK_URL}{response["result"]}/'
-    bot.send_message(user_id, f"Задача создана: {task_url}", reply_markup=main_menu_markup(authenticated=True))
-    bot.send_message(CHAT_ID, f"Создана задача: {task_url}")
-else:
-    bot.send_message(user_id, "Не удалось создать задачу. Пожалуйста, попробуйте позже.", reply_markup=main_menu_markup(authenticated=True))
+    if 'error' in response:
+        bot.send_message(user_id, response['error'], reply_markup=main_menu_markup(authenticated=True))
+    elif response.get('result'):
+        task_url = f'{BITRIX_TASK_URL}{response["result"]}/'
+        bot.send_message(user_id, f"Задача создана: {task_url}", reply_markup=main_menu_markup(authenticated=True))
+        bot.send_message(CHAT_ID, f"Создана задача: {task_url}")
+    else:
+        bot.send_message(user_id, "Не удалось создать задачу. Пожалуйста, попробуйте позже.", reply_markup=main_menu_markup(authenticated=True))
 
 if __name__ == "__main__":
     bot.polling(none_stop=True)
-
-    
